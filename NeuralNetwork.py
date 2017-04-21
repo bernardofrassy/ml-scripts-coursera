@@ -238,14 +238,14 @@ def nn_prediction(X,theta_list):
 w, grad,neuron_list = neural_net_param(X_train,Y0_train,3,[3,3,3], alpha = 0.5, reg_factor = 0.5)
 prob_y0 = nn_prediction(X_cross,w)[-1]
 pred_y0 = (prob_y0 > 0.5) * (1)
-sum((pred_y0 == Y0_cross) * (1))/Y0_cross.shape[0]
+print(sum((pred_y0 == Y0_cross) * (1))/Y0_cross.shape[0])
 
 w, grad,neuron_list = neural_net_param(X_train,Y1_train,3,[3,3,3], alpha = 1, reg_factor = 0.5)
 prob_y1 = nn_prediction(X_cross,w)[-1]
 pred_y1 = (prob_y1 > 0.5) * (1)
-sum((pred_y1 == Y1_cross) * (1))/Y1_cross.shape[0]
+print(sum((pred_y1 == Y1_cross) * (1))/Y1_cross.shape[0])
 
 w, grad,neuron_list = neural_net_param(X_train,Y2_train,3,[3,3,3], alpha = 1, reg_factor = 0.5)
 prob_y2 = nn_prediction(X_cross,w)[-1]
 pred_y2 = (prob_y2 > 0.5) * (1)
-sum((pred_y2 == Y2_cross) * (1))/Y2_cross.shape[0]
+print(sum((pred_y2 == Y2_cross) * (1))/Y2_cross.shape[0])
