@@ -48,13 +48,13 @@ def neural_net_hyp(dataX, dataY, numLayers, numNeurons, reg_factor = 0):
     neuron_list = [0]*(numLayers + 1)
     z_list = [0]*(numLayers + 1)
     #Defining theta values:
-    for i in range(0,len(theta_list)):
+    for i in range(len(theta_list)):
         if i == 0:
             theta_list[i] = np.random.rand(X.shape[1], numNeurons[i])
         else:
             theta_list[i] = np.random.rand(numNeurons[i-1], numNeurons[i])
     #Defining neuron and z values:
-    for i in range(0,numLayers+1):
+    for i in range(numLayers+1):
         if i == 0:
             z_list[i] = X * theta_list[i]
         else:
@@ -65,7 +65,7 @@ def neural_net_hyp(dataX, dataY, numLayers, numNeurons, reg_factor = 0):
 def forward_propagation(X,theta_list):
     neuron_list = [0]*(len(theta_list)+1)
     z_list = [0]*(len(theta_list)+1)
-    for i in range(0,len(theta_list)+1):
+    for i in range(len(theta_list)+1):
         if i == 0:
             neuron_list[i] = X
         else:
@@ -74,7 +74,7 @@ def forward_propagation(X,theta_list):
     return neuron_list
     
 def check_shape(array):
-    for i in range(0,len(array)):
+    for i in range(len(array)):
         print('For %s shape is: %s' %(i,array[i].shape))
     return
 
@@ -83,18 +83,18 @@ def backpropagation(X,Y,theta_list,neuron_list, reg_factor = 0):
     # Defining partial derivative to z:
     delta = [0]*(len(theta_list))
     dg_z = [0] * len(theta_list)
-    for i in range(0,len(theta_list)):
+    for i in range(len(theta_list)):
         dg_z[i] = np.multiply(neuron_list[i+1],(1-neuron_list[i+1]))
     # Calculating deltas:
-    for i in range(0,numLayers+1)[::-1]:
+    for i in range(numLayers+1)[::-1]:
         if i == (numLayers):
             delta[i] = neuron_list[i+1] - Y
         else:
             delta[i] = np.multiply((delta[i+1]* theta_list[i+1].T),dg_z[i])
     gradient = [0] * len(theta_list)
-    for i in range(0,len(theta_list)):
+    for i in range(len(theta_list)):
         gradient[i] = np.zeros(theta_list[i].shape)
-    for i in range(0,numLayers+1):
+    for i in range(numLayers+1):
         gradient[i] = (neuron_list[i].T * delta[i])/X.shape[0] 
         gradient[i] = gradient[i] + reg_factor * theta_list[i]
     return gradient
@@ -102,7 +102,7 @@ def backpropagation(X,Y,theta_list,neuron_list, reg_factor = 0):
 def neural_net_cost(X,Y, theta_list, neuron_list, reg_factor = 0):
     hyp = neuron_list[-1]
     m = X.shape[0]
-    theta_sum = [np.sum(np.sum(np.square(theta_list[i]))) for i in range(0,len(theta_list))]
+    theta_sum = [np.sum(np.sum(np.square(theta_list[i]))) for i in range(len(theta_list))]
     theta_sum = np.sum(theta_sum)
     cost = (-Y.T * np.log(hyp) - (1-Y).T * np.log(1 - hyp))/m
     cost = cost + reg_factor/m * theta_sum
@@ -165,7 +165,7 @@ def neural_net_param(dataX, dataY, numLayers, numNeurons, reg_factor = 0):
     theta_list = [0]*(numLayers + 1)
     
     #Random inital theta_values:
-    for i in range(0,len(theta_list)):
+    for i in range(len(theta_list)):
         if i == 0:
             theta_list[i] = np.random.rand(X.shape[1], numNeurons[i])
         else:

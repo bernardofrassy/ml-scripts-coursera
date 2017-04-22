@@ -50,6 +50,7 @@ def logreg_prob(X,w):
     prediction = logreg_hyp(X,w)
     return prediction
 
+# Set binary Y to test function
 Y_1 = Y * (Y == 1)
 Y_2 = Y/2 * (Y == 2)
 Y_0 = (Y+1) * (Y == 0)

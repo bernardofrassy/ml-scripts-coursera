@@ -19,10 +19,10 @@ def data_creation(examples, features):
     dataSet = pd.DataFrame()
     for i in range(1,d):
         if i < int(d):
-            dataSet['x'+str(i)] = [(i*k)**i for k in range(0,n)]
+            dataSet['x'+str(i)] = [(i*k)**i for k in range(n)]
         else:
-            dataSet['xRand' + str(i+1)] = [np.random.normal() for i in range(0,n)]
-    dataSet['y'] = [i*2 for i in range(0,n)]
+            dataSet['xRand' + str(i+1)] = [np.random.normal() for i in range(n)]
+    dataSet['y'] = [i*2 for i in range(n)]
     return dataSet
 
 def data_seg(dataSet):
@@ -33,7 +33,7 @@ def data_seg(dataSet):
         df = pd.DataFrame(dataSet)
     except:
         return print('dataSet cannot be converted into pandas.DataFrame')
-    df['Segment'] = pd.Series([rd.random() for i in range(0,dataLength)])
+    df['Segment'] = pd.Series([rd.random() for i in range(dataLength)])
     dataTrain = df[(df['Segment'] <= 0.6)]
     dataTrain = dataTrain.iloc[:,:-1]
     dataCross = df[(df['Segment'] > 0.6) & (df['Segment'] <= 0.8)]
