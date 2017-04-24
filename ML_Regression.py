@@ -25,7 +25,7 @@ def data_creation(examples, features):
     dataSet['y'] = [i*2 for i in range(n)]
     return dataSet
 
-def data_seg(dataSet):
+def data_seg(dataSet: 'data format convertible to pd.DataFrame'):
     import pandas as pd
     import random as rd
     dataLength = len(dataSet)
@@ -42,13 +42,23 @@ def data_seg(dataSet):
     dataTest = dataTest.iloc[:,:-1]
     return dataTrain,dataCross,dataTest
 
-def normalize_data(data):
+def normalize_data(data: 'np.matrix, pd.DataFrame os similar'
+                   ) -> np.matrix:
+    """
+    Normalizes a given dataset.
+    """
     for i in range(data.shape[1]):
         if np.std(data[:,i]) != 0:
             data[:,i] = (data[:,i] - np.average(data[:,i]))/np.std(data[:,i])
     return data
 
-def lr_param(dataX,dataY, alpha = 10**(-2), maxIteration = 100000, reg_factor = None):
+def lr_param(dataX: pd.DataFrame, dataY: pd.DataFrame,
+             alpha: float = 10**(-2), maxIteration: int = 100000,
+             reg_factor: float = None) -> np.matrix:
+    """
+    Calculates the parameters of a linear regression.
+    Automatically includes the intercept.
+    """
     import numpy as np
     try:
         X = np.matrix(dataX)
@@ -72,17 +82,32 @@ def lr_param(dataX,dataY, alpha = 10**(-2), maxIteration = 100000, reg_factor = 
         w = grad_descent(X,Y, ls_cost, ls_cost_grad, alpha = alpha, reg_factor = reg_factor)
     return w
 
-def ls_cost(X,Y,w, reg_factor = 0):
+def ls_cost(X: np.matrix,Y: np.matrix,w: np.matrix,
+            reg_factor: float = 0) -> float:
+    """
+    Calculates the cost of using the least squares method.
+    """
     n = X.shape[0]
     cost = 1/(2*n) * ((X * w - Y).T * (X * w - Y) + reg_factor * (w[1:].T * w[1:]))
     return cost
 
-def ls_cost_grad(X,Y,w, reg_factor = 0):
+def ls_cost_grad(X: np.matrix,Y: np.matrix,w: np.matrix,
+                 reg_factor: float = 0) -> np.matrix:
+    """
+    Calculates the cost gradient of a the least squares method.
+    """
     n = X.shape[0]
     cost_grad = (1/n) * (X.T * (X * w - Y) + reg_factor * w)
     return cost_grad
 
-def grad_descent(X, Y, costFunction, gradFunction, alpha = 10**(-2), reg_factor = 0, maxIteration = 10000):
+def grad_descent(X: np.matrix, Y: np.matrix,
+                 costFunction: 'function', gradFunction: 'fuction',
+                 alpha: float = 10**(-2), reg_factor: float = 0,
+                 maxIteration: int = 10000) -> (np.matrix,float):
+    """
+    Performs the gradient descent until a maxIteration is reached or if the
+    cost value between iterations becomes smaller than 10**(-5).
+    """
     import numpy as np 
     #Initial guess (all zeros):
     w = np.matrix(np.zeros((X.shape[1],1)))
@@ -101,7 +126,10 @@ def grad_descent(X, Y, costFunction, gradFunction, alpha = 10**(-2), reg_factor 
         count += 1   
     return w,cost
 
-def plot_reg(X,Y,w):
+def plot_reg(X: np.matrix,Y: np.matrix,w: np.matrix) -> None:
+    """
+    Plots the results of a regression.
+    """
     import matplotlib.pyplot as plt
     X = pd.DataFrame(X).copy()
     X['Intercept'] = 1

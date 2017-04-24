@@ -16,10 +16,8 @@ Created on Mon Apr 10 14:32:49 2017
 Machine Learning Functions
 """
 import numpy as np
-import pdb
 import sklearn
 import pandas as pd
-from sklearn.datasets.samples_generator import make_regression 
 from ML_Regression import data_seg
 
 iris = sklearn.datasets.load_iris()
@@ -54,7 +52,14 @@ X_train =  np.matrix(data_train.iloc[:,:-1])
 X_cross =  np.matrix(data_cross.iloc[:,:-1])
 X_test =  np.matrix(data_test.iloc[:,:-1])
 
-def neural_net_hyp(dataX, dataY, numLayers, numNeurons, reg_factor = 0):
+def neural_net_hyp(dataX: 'pd.DataFrame or similar',
+                   dataY: 'pd.DataFrame or similar',
+                   numLayers: int, numNeurons: int,
+                   reg_factor: float = 0) -> (list,list):
+    """
+    Calculates the weights and neurons value for a given neural network
+    architecture.
+    """
     try:
         X = np.matrix(dataX)
         X = np.concatenate((np.ones((X.shape[0],1)),X), axis = 1)
@@ -97,7 +102,10 @@ def neural_net_hyp(dataX, dataY, numLayers, numNeurons, reg_factor = 0):
         neuron_list[i] = np.concatenate((np.ones((X.shape[0],1)),X), axis = 1)
     return theta_list,neuron_list
 
-def forward_propagation(X,theta_list):
+def forward_propagation(X: np.matrix, theta_list: list) -> list:
+    """
+    Performs forward propagation to calculate neuron values.
+    """
     neuron_list = [0]*(len(theta_list)+1)
     z_list = [0]*(len(theta_list)+1)
     for i in range(len(theta_list)+1):
@@ -111,12 +119,21 @@ def forward_propagation(X,theta_list):
                 neuron_list[i] = np.concatenate((ones_row,neuron_list[i]), axis = 1)
     return neuron_list
     
-def check_shape(array):
-    for i in range(len(array)):
-        print('For %s shape is: %s' %(i,array[i].shape))
+def check_shape(a: list) -> None:
+    """
+    Prints shape of components inside the given argument.
+    """
+    for i in range(len(a)):
+        print('For %s shape is: %s' %(i,a[i].shape))
     return
 
-def backpropagation(X,Y,theta_list,neuron_list, reg_factor = 0):
+def backpropagation(X: np.matrix,Y: np.matrix,theta_list: list, 
+                    neuron_list: list,
+                    reg_factor: float = 0) -> list:
+    """
+    Calculates the gradient using backpropagation algorith for
+    neural networks.
+    """
     numLayers = len(theta_list)-1
     # Defining partial derivative to z:
     delta = [0]*(len(theta_list))
@@ -137,7 +154,11 @@ def backpropagation(X,Y,theta_list,neuron_list, reg_factor = 0):
         gradient[i] = gradient[i] + reg_factor * theta_list[i]
     return gradient
 
-def neural_net_cost(X,Y, theta_list, neuron_list, reg_factor = 0):
+def neural_net_cost(X: np.matrix,Y: np.matrix, theta_list: list,
+                    neuron_list: list, reg_factor:float = 0) -> float:
+    """
+    Calculates the cross entropy for a given neural network.
+    """
     hyp = neuron_list[-1]
     m = X.shape[0]
     theta_sum = [np.sum(np.sum(np.square(theta_list[i]))) for i in range(len(theta_list))]
@@ -147,8 +168,14 @@ def neural_net_cost(X,Y, theta_list, neuron_list, reg_factor = 0):
     cost = np.sum(cost)
     return cost
 
-def grad_descent_nn(X, Y, costFunction, gradFunction,
-                    w_initial = 0, alpha = 10**(-2), reg_factor = 0,maxIteration = 100000):
+def grad_descent_nn(X: np.matrix, Y: np.matrix,
+                    costFunction: 'function', gradFunction: 'function',
+                    w_initial: np.matrix = 0, 
+                    alpha: float = 10**(-2),reg_factor: float = 0,
+                    maxIteration: int = 100000):
+    """
+    Performs gradient descent for a given neural network.
+    """
     import numpy as np 
     #Initial guess (all zeros):
     if w_initial == 0:
@@ -178,7 +205,14 @@ def grad_descent_nn(X, Y, costFunction, gradFunction,
     print(error, count)
     return w, grad, neuron_list
 
-def neural_net_param(dataX, dataY, numLayers, numNeurons, alpha = 10**(-2), reg_factor = 0):
+def neural_net_param(dataX: 'pd.DataFrame or similar',
+                     dataY: 'pd.DataFrame or similar',
+                     numLayers: int, numNeurons: int,
+                     alpha: float = 10**(-2), reg_factor: float = 0
+                     ) -> (np.matrix, np.matrix, list):
+    """
+    Trains the weights for a given neural network architecture.
+    """
     try:
         X = np.matrix(dataX)
         X = np.concatenate((np.ones((X.shape[0],1)),X), axis = 1)
@@ -215,7 +249,7 @@ def neural_net_param(dataX, dataY, numLayers, numNeurons, alpha = 10**(-2), reg_
                                          w_initial = theta_list, alpha = alpha)
     return w, grad, neuron_list
 
-def nn_prediction(X,theta_list):
+def nn_prediction(X: np.matrix,theta_list: list) -> list:
     try:
         X = np.matrix(X)
         X = np.concatenate((np.ones((X.shape[0],1)),X), axis = 1)
@@ -235,17 +269,17 @@ def nn_prediction(X,theta_list):
     return neuron_list
 
 
-w, grad,neuron_list = neural_net_param(X_train,Y0_train,3,[3,3,3], alpha = 0.5, reg_factor = 0.5)
+w, grad,neuron_list = neural_net_param(X_train,Y0_train,2,[3,3], alpha = 0.5, reg_factor = 0.5)
 prob_y0 = nn_prediction(X_cross,w)[-1]
 pred_y0 = (prob_y0 > 0.5) * (1)
 print(sum((pred_y0 == Y0_cross) * (1))/Y0_cross.shape[0])
 
-w, grad,neuron_list = neural_net_param(X_train,Y1_train,3,[3,3,3], alpha = 1, reg_factor = 0.5)
+w, grad,neuron_list = neural_net_param(X_train,Y1_train,2,[3,3], alpha = 1, reg_factor = 0.5)
 prob_y1 = nn_prediction(X_cross,w)[-1]
 pred_y1 = (prob_y1 > 0.5) * (1)
 print(sum((pred_y1 == Y1_cross) * (1))/Y1_cross.shape[0])
 
-w, grad,neuron_list = neural_net_param(X_train,Y2_train,3,[3,3,3], alpha = 1, reg_factor = 0.5)
+w, grad,neuron_list = neural_net_param(X_train,Y2_train,2,[3,3], alpha = 1, reg_factor = 0.5)
 prob_y2 = nn_prediction(X_cross,w)[-1]
 pred_y2 = (prob_y2 > 0.5) * (1)
 print(sum((pred_y2 == Y2_cross) * (1))/Y2_cross.shape[0])

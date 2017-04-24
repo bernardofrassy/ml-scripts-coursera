@@ -7,9 +7,46 @@ Created on Tue Apr 18 14:53:40 2017
     logreg_prob.
 @author: bernardoalencar
 """
+import numpy as np
+import sklearn
+import pandas as pd
+from ML_Regression import grad_descent, data_seg
 
-def logreg_param(dataX,dataY, alpha = 10**(-2)):
-    import numpy as np
+iris = sklearn.datasets.load_iris()
+X = iris.data[:, :2]
+X = np.matrix(X)
+Y = iris.target
+Y_1 = np.matrix(Y * (Y == 1)).T
+Y_2 = np.matrix(Y * (Y == 2)).T
+Y_0 = np.matrix((Y + 1) * (Y == 0)).T
+Y = np.matrix(Y).T
+
+data = pd.DataFrame(X)
+data['Y'] = Y
+data_train, data_cross, data_test = data_seg(data)
+Y_train = np.matrix(data_train['Y']).T
+Y_cross = np.matrix(data_cross['Y']).T
+Y_test = np.matrix(data_test['Y']).T
+
+Y0_train = (Y_train == 0) * 1
+Y0_cross = (Y_cross == 0) * 1
+Y0_test = (Y_test == 0) * 1
+
+Y1_train = (Y_train == 1) * 1
+Y1_cross = (Y_cross == 1) * 1
+Y1_test = (Y_test == 1) * 1
+
+Y2_train = (Y_train == 2) * 1
+Y2_cross = (Y_cross == 2) * 1
+Y2_test = (Y_test == 2) * 1
+
+X_train =  np.matrix(data_train.iloc[:,:-1])
+X_cross =  np.matrix(data_cross.iloc[:,:-1])
+X_test =  np.matrix(data_test.iloc[:,:-1])
+
+def logreg_param(dataX: 'pd.DataFrame or similar',
+                 dataY: 'pd.DataFrame or similar',
+                 alpha: float = 10**(-2)) -> np.matrix:
     try:
         X = np.matrix(dataX)
         Y = np.matrix(dataY).reshape([X.shape[0],1])
@@ -23,25 +60,28 @@ def logreg_param(dataX,dataY, alpha = 10**(-2)):
                      logreg_cost_grad, alpha = alpha)[0]
     return w
 
-def logreg_hyp(X,w):
+def logreg_hyp(X: np.matrix, w: np.matrix) -> np.matrix:
     import numpy as np
     hyp = 1/(1 + np.exp(-(X*w)))
     return hyp
 
-def logreg_cost(X,Y,w, reg_factor = 0):
+def logreg_cost(X: np.matrix, Y: np.matrix,
+                w: np.matrix, reg_factor: float = 0) -> float:
     n = X.shape[0]
     hyp = logreg_hyp(X,w)
-    cost = 1/(n) * (-Y.T * np.log(hyp) - (1-Y).T*np.log(1-hyp) + reg_factor * (w[1:].T * w[1:]))
+    cost = 1/(n) * (-Y.T * np.log(hyp) -(1-Y).T*np.log(1-hyp) +
+              reg_factor * (w[1:].T * w[1:]))
     return cost
 
-def logreg_cost_grad(X,Y,w, reg_factor = 0):
+def logreg_cost_grad(X: np.matrix, Y: np.matrix,
+                     w: np.matrix, reg_factor: float = 0) -> np.matrix:
     n = X.shape[0]
     hyp = logreg_hyp(X,w)
     cost_grad = (1/n) * (X.T * (hyp - Y) + reg_factor * w)
     return cost_grad
 
 
-def logreg_prob(X,w):
+def logreg_prob(X: np.matrix, w: np.matrix) -> np.matrix:
     import numpy as np
     X = np.matrix(X)
     n = X.shape[0]
@@ -51,16 +91,19 @@ def logreg_prob(X,w):
     return prediction
 
 # Set binary Y to test function
-Y_1 = Y * (Y == 1)
-Y_2 = Y/2 * (Y == 2)
-Y_0 = (Y+1) * (Y == 0)
-w_0 = logreg_param(X,Y_0)
-w_1 = logreg_param(X,Y_1)
-w_2 = logreg_param(X,Y_2)
-prob_0 = logreg_prob(X,w_0)
-prob_1 = logreg_prob(X,w_1)
-prob_2 = logreg_prob(X,w_2)
+w_0 = logreg_param(X_train,Y0_train)
+w_1 = logreg_param(X_train,Y1_train)
+w_2 = logreg_param(X_train,Y2_train)
+
+prob_0 = logreg_prob(X_cross,w_0)
+prob_1 = logreg_prob(X_cross,w_1)
+prob_2 = logreg_prob(X_cross,w_2)
+
+
 
 pred_0 = (np.greater(prob_0,prob_1) & np.greater(prob_0,prob_2))*1
+print(sum((pred_0 == Y0_cross) * (1))/Y0_cross.shape[0])
 pred_1 = (np.greater(prob_1,prob_0) & np.greater(prob_1,prob_2))*1
+print(sum((pred_1 == Y1_cross) * (1))/Y1_cross.shape[0])
 pred_2 = (np.greater(prob_2,prob_0) & np.greater(prob_2,prob_1))*1
+print(sum((pred_2 == Y2_cross) * (1))/Y2_cross.shape[0])
