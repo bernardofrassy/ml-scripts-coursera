@@ -8,49 +8,7 @@ Created on Tue Apr 18 14:50:07 2017
 @author: bernardoalencar
 """
 import numpy as np
-import pandas as pd
-from sklearn.datasets.samples_generator import make_regression 
-
-def data_creation(examples, features):
-    import numpy as np
-    import pandas as pd
-    n = examples
-    d = features
-    dataSet = pd.DataFrame()
-    for i in range(1,d):
-        if i < int(d):
-            dataSet['x'+str(i)] = [(i*k)**i for k in range(n)]
-        else:
-            dataSet['xRand' + str(i+1)] = [np.random.normal() for i in range(n)]
-    dataSet['y'] = [i*2 for i in range(n)]
-    return dataSet
-
-def data_seg(dataSet: 'data format convertible to pd.DataFrame'):
-    import pandas as pd
-    import random as rd
-    dataLength = len(dataSet)
-    try:
-        df = pd.DataFrame(dataSet)
-    except:
-        return print('dataSet cannot be converted into pandas.DataFrame')
-    df['Segment'] = pd.Series([rd.random() for i in range(dataLength)])
-    dataTrain = df[(df['Segment'] <= 0.6)]
-    dataTrain = dataTrain.iloc[:,:-1]
-    dataCross = df[(df['Segment'] > 0.6) & (df['Segment'] <= 0.8)]
-    dataCross = dataCross.iloc[:,:-1]
-    dataTest = df[df['Segment'] > 0.8]
-    dataTest = dataTest.iloc[:,:-1]
-    return dataTrain,dataCross,dataTest
-
-def normalize_data(data: 'np.matrix, pd.DataFrame os similar'
-                   ) -> np.matrix:
-    """
-    Normalizes a given dataset.
-    """
-    for i in range(data.shape[1]):
-        if np.std(data[:,i]) != 0:
-            data[:,i] = (data[:,i] - np.average(data[:,i]))/np.std(data[:,i])
-    return data
+import pandas as pd 
 
 def lr_param(dataX: pd.DataFrame, dataY: pd.DataFrame,
              alpha: float = 10**(-2), maxIteration: int = 100000,
@@ -145,7 +103,3 @@ def plot_reg(X: np.matrix,Y: np.matrix,w: np.matrix) -> None:
         plt.plot(X.iloc[:,col],y_predict, label = 'Regression')
         plt.legend()
     return
-
-X, Y = make_regression(n_samples=5000, n_features=1, n_informative=1, random_state=0, noise=35)
-w = lr_param(X,Y, reg_factor = 1)[0]
-plot_reg(X,Y,w)

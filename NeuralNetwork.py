@@ -16,41 +16,18 @@ Created on Mon Apr 10 14:32:49 2017
 Machine Learning Functions
 """
 import numpy as np
-import sklearn
-import pandas as pd
-from ML_Regression import data_seg
+import sklearn.datasets
+import DataPreProcess
 
 iris = sklearn.datasets.load_iris()
-X = iris.data[:, :2]
-X = np.matrix(X)
-Y = iris.target
-Y_1 = np.matrix(Y * (Y == 1)).T
-Y_2 = np.matrix(Y * (Y == 2)).T
-Y_0 = np.matrix((Y + 1) * (Y == 0)).T
-Y = np.matrix(Y).T
+X = DataPreProcess.data_std_shape(iris.data[:, :2])
+Y = DataPreProcess.data_std_shape(iris.target)
 
-data = pd.DataFrame(X)
-data['Y'] = Y
-data_train, data_cross, data_test = data_seg(data)
-Y_train = np.matrix(data_train['Y']).T
-Y_cross = np.matrix(data_cross['Y']).T
-Y_test = np.matrix(data_test['Y']).T
+Y0,Y1,Y2 = DataPreProcess.data_class_separation(Y,[0,1,2])
+X0_seg, Y0_seg = DataPreProcess.data_seg(X,Y0)
+X1_seg, Y1_seg = DataPreProcess.data_seg(X,Y1)
+X2_seg, Y2_seg = DataPreProcess.data_seg(X,Y2)
 
-Y0_train = (Y_train == 0) * 1
-Y0_cross = (Y_cross == 0) * 1
-Y0_test = (Y_test == 0) * 1
-
-Y1_train = (Y_train == 1) * 1
-Y1_cross = (Y_cross == 1) * 1
-Y1_test = (Y_test == 1) * 1
-
-Y2_train = (Y_train == 2) * 1
-Y2_cross = (Y_cross == 2) * 1
-Y2_test = (Y_test == 2) * 1
-
-X_train =  np.matrix(data_train.iloc[:,:-1])
-X_cross =  np.matrix(data_cross.iloc[:,:-1])
-X_test =  np.matrix(data_test.iloc[:,:-1])
 
 def neural_net_hyp(dataX: 'pd.DataFrame or similar',
                    dataY: 'pd.DataFrame or similar',
@@ -186,11 +163,13 @@ def grad_descent_nn(X: np.matrix, Y: np.matrix,
     count_increase = 0
     error = 0.1
     cost_old = 10
+    w_new = [0] * len(w)
     while ((error > 10**(-10)) and (count < maxIteration)):
         neuron_list = forward_propagation(X,w)
         cost = costFunction(X,Y, w, neuron_list, reg_factor = reg_factor)
         grad = gradFunction(X,Y,w, neuron_list, reg_factor = reg_factor)
-        w_new = np.subtract(w, np.multiply(grad, alpha))
+        for i in range(len(w)):
+            w_new[i] = w[i] - grad[i] * alpha
         #In case the cost Function increases:
         if cost > cost_old:
             count_increase += 1
@@ -254,7 +233,7 @@ def nn_prediction(X: np.matrix,theta_list: list) -> list:
         X = np.matrix(X)
         X = np.concatenate((np.ones((X.shape[0],1)),X), axis = 1)
     except:
-        raise ValueError('dataSet cannot be converted into Matrix')
+        raise ValueError('X cannot be converted into Matrix')
     neuron_list = [0]*(len(theta_list)+1)
     z_list = [0]*(len(theta_list)+1)
     for i in range(len(theta_list)+1):
@@ -267,19 +246,3 @@ def nn_prediction(X: np.matrix,theta_list: list) -> list:
                 ones_row = np.ones((neuron_list[i].shape[0],1))
                 neuron_list[i] = np.concatenate((ones_row,neuron_list[i]), axis = 1)
     return neuron_list
-
-
-w, grad,neuron_list = neural_net_param(X_train,Y0_train,2,[3,3], alpha = 0.5, reg_factor = 0.5)
-prob_y0 = nn_prediction(X_cross,w)[-1]
-pred_y0 = (prob_y0 > 0.5) * (1)
-print(sum((pred_y0 == Y0_cross) * (1))/Y0_cross.shape[0])
-
-w, grad,neuron_list = neural_net_param(X_train,Y1_train,2,[3,3], alpha = 1, reg_factor = 0.5)
-prob_y1 = nn_prediction(X_cross,w)[-1]
-pred_y1 = (prob_y1 > 0.5) * (1)
-print(sum((pred_y1 == Y1_cross) * (1))/Y1_cross.shape[0])
-
-w, grad,neuron_list = neural_net_param(X_train,Y2_train,2,[3,3], alpha = 1, reg_factor = 0.5)
-prob_y2 = nn_prediction(X_cross,w)[-1]
-pred_y2 = (prob_y2 > 0.5) * (1)
-print(sum((pred_y2 == Y2_cross) * (1))/Y2_cross.shape[0])
