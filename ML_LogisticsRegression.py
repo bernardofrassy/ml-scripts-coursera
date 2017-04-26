@@ -8,41 +8,7 @@ Created on Tue Apr 18 14:53:40 2017
 @author: bernardoalencar
 """
 import numpy as np
-import sklearn
-import pandas as pd
-from ML_Regression import grad_descent, data_seg
-
-iris = sklearn.datasets.load_iris()
-X = iris.data[:, :2]
-X = np.matrix(X)
-Y = iris.target
-Y_1 = np.matrix(Y * (Y == 1)).T
-Y_2 = np.matrix(Y * (Y == 2)).T
-Y_0 = np.matrix((Y + 1) * (Y == 0)).T
-Y = np.matrix(Y).T
-
-data = pd.DataFrame(X)
-data['Y'] = Y
-data_train, data_cross, data_test = data_seg(data)
-Y_train = np.matrix(data_train['Y']).T
-Y_cross = np.matrix(data_cross['Y']).T
-Y_test = np.matrix(data_test['Y']).T
-
-Y0_train = (Y_train == 0) * 1
-Y0_cross = (Y_cross == 0) * 1
-Y0_test = (Y_test == 0) * 1
-
-Y1_train = (Y_train == 1) * 1
-Y1_cross = (Y_cross == 1) * 1
-Y1_test = (Y_test == 1) * 1
-
-Y2_train = (Y_train == 2) * 1
-Y2_cross = (Y_cross == 2) * 1
-Y2_test = (Y_test == 2) * 1
-
-X_train =  np.matrix(data_train.iloc[:,:-1])
-X_cross =  np.matrix(data_cross.iloc[:,:-1])
-X_test =  np.matrix(data_test.iloc[:,:-1])
+from ML_Regression import grad_descent
 
 def logreg_param(dataX: 'pd.DataFrame or similar',
                  dataY: 'pd.DataFrame or similar',
@@ -90,20 +56,20 @@ def logreg_prob(X: np.matrix, w: np.matrix) -> np.matrix:
     prediction = logreg_hyp(X,w)
     return prediction
 
-# Set binary Y to test function
-w_0 = logreg_param(X_train,Y0_train)
-w_1 = logreg_param(X_train,Y1_train)
-w_2 = logreg_param(X_train,Y2_train)
-
-prob_0 = logreg_prob(X_cross,w_0)
-prob_1 = logreg_prob(X_cross,w_1)
-prob_2 = logreg_prob(X_cross,w_2)
-
-
-
-pred_0 = (np.greater(prob_0,prob_1) & np.greater(prob_0,prob_2))*1
-print(sum((pred_0 == Y0_cross) * (1))/Y0_cross.shape[0])
-pred_1 = (np.greater(prob_1,prob_0) & np.greater(prob_1,prob_2))*1
-print(sum((pred_1 == Y1_cross) * (1))/Y1_cross.shape[0])
-pred_2 = (np.greater(prob_2,prob_0) & np.greater(prob_2,prob_1))*1
-print(sum((pred_2 == Y2_cross) * (1))/Y2_cross.shape[0])
+## Set binary Y to test function
+#w_0 = logreg_param(X_train,Y0_train)
+#w_1 = logreg_param(X_train,Y1_train)
+#w_2 = logreg_param(X_train,Y2_train)
+#
+#prob_0 = logreg_prob(X_cross,w_0)
+#prob_1 = logreg_prob(X_cross,w_1)
+#prob_2 = logreg_prob(X_cross,w_2)
+#
+#
+#
+#pred_0 = (np.greater(prob_0,prob_1) & np.greater(prob_0,prob_2))*1
+#print(sum((pred_0 == Y0_cross) * (1))/Y0_cross.shape[0])
+#pred_1 = (np.greater(prob_1,prob_0) & np.greater(prob_1,prob_2))*1
+#print(sum((pred_1 == Y1_cross) * (1))/Y1_cross.shape[0])
+#pred_2 = (np.greater(prob_2,prob_0) & np.greater(prob_2,prob_1))*1
+#print(sum((pred_2 == Y2_cross) * (1))/Y2_cross.shape[0])

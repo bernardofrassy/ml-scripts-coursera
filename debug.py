@@ -18,6 +18,8 @@ Y0,Y1,Y2 = DataPreProcess.data_class_separation(Y,[0,1,2])
 X0_seg, Y0_seg = DataPreProcess.data_seg(X,Y0)
 X1_seg, Y1_seg = DataPreProcess.data_seg(X,Y1)
 X2_seg, Y2_seg = DataPreProcess.data_seg(X,Y2)
+Y_multi = np.concatenate((Y0,Y1,Y2), axis = 1)
+X_seg, Y_multi_seg = DataPreProcess.data_seg(X,Y_multi)
 
 w, grad,neuron_list = neural_net_param(X0_seg[0],Y0_seg[0],2,[3,3], alpha = 0.5, reg_factor = 0.5)
 prob_y0 = nn_prediction(X0_seg[1],w)[-1]

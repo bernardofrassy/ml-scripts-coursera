@@ -26,7 +26,7 @@ def lr_data_creation(n_samples: int, n_features: int = 1,
 
 def data_to_class(data: 'np array-like', numClasses: int) -> 'np array-like':
     """
-    Converts a lineara array to one with a defined number of classes
+    Converts a linear array to one with a defined number of classes.
     """
     data = normalize_data(data)
     dataClass = np.copy(data)

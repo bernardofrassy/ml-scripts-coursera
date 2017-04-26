@@ -16,18 +16,6 @@ Created on Mon Apr 10 14:32:49 2017
 Machine Learning Functions
 """
 import numpy as np
-import sklearn.datasets
-import DataPreProcess
-
-iris = sklearn.datasets.load_iris()
-X = DataPreProcess.data_std_shape(iris.data[:, :2])
-Y = DataPreProcess.data_std_shape(iris.target)
-
-Y0,Y1,Y2 = DataPreProcess.data_class_separation(Y,[0,1,2])
-X0_seg, Y0_seg = DataPreProcess.data_seg(X,Y0)
-X1_seg, Y1_seg = DataPreProcess.data_seg(X,Y1)
-X2_seg, Y2_seg = DataPreProcess.data_seg(X,Y2)
-
 
 def neural_net_hyp(dataX: 'pd.DataFrame or similar',
                    dataY: 'pd.DataFrame or similar',
@@ -45,7 +33,8 @@ def neural_net_hyp(dataX: 'pd.DataFrame or similar',
     try:
         numLayers = int(numLayers)
     except:
-        print('numLayers must be an integer or float that can be coerced into an integer')
+        print('numLayers must be an integer or float that can' +
+              ' be coerced into an integer')
         return
     try:
         numNeurons = [int(numNeurons)] * numLayers
@@ -55,10 +44,12 @@ def neural_net_hyp(dataX: 'pd.DataFrame or similar',
             numNeurons = list(int(i) for i in numNeurons)
             numNeurons.append(int(1))
         except:
-            print('NumNeurons must be a single value or a vector of size numLayers')
+            print('NumNeurons must be a single value or a vector of size' +
+                  ' numLayers')
             return
     if len(numNeurons)-1 != numLayers:
-        raise ValueError('NumNeurons must be a single value or a vector of size numLayers')
+        raise ValueError('NumNeurons must be a single value or a vector' +
+                         ' of size numLayers')
     #Defining parameters initial values:
     theta_list = [0]*(numLayers+1)
     neuron_list = [0]*(numLayers + 1)
@@ -122,7 +113,7 @@ def backpropagation(X: np.matrix,Y: np.matrix,theta_list: list,
         if i == (numLayers):
             delta[i] = neuron_list[i+1] - Y
         else:
-            delta[i] = np.multiply((delta[i+1]* theta_list[i+1][1:,:].T),dg_z[i][:,1:])
+            delta[i] = np.multiply((delta[i+1] * theta_list[i+1][1:,:].T), dg_z[i][:,1:])
     gradient = [0] * len(theta_list)
     for i in range(len(theta_list)):
         gradient[i] = np.zeros(theta_list[i].shape)
@@ -136,27 +127,27 @@ def neural_net_cost(X: np.matrix,Y: np.matrix, theta_list: list,
     """
     Calculates the cross entropy for a given neural network.
     """
+    cost = 0
     hyp = neuron_list[-1]
     m = X.shape[0]
-    theta_sum = [np.sum(np.sum(np.square(theta_list[i]))) for i in range(len(theta_list))]
+    theta_sum = [np.sum(np.sum(np.square(theta_list[i]))) for i in
+                 range(len(theta_list))]
     theta_sum = np.sum(theta_sum)
-    cost = (-Y.T * np.log(hyp) - (1-Y).T * np.log(1 - hyp))/m
+    cost = (- np.sum(np.multiply(Y, np.log(hyp)), axis = (0,1)) -
+            np.sum(np.multiply((1-Y), np.log(1-hyp)), axis = (0,1)))/m
     cost = cost + reg_factor/m * theta_sum
     cost = np.sum(cost)
     return cost
 
 def grad_descent_nn(X: np.matrix, Y: np.matrix,
                     costFunction: 'function', gradFunction: 'function',
-                    w_initial: np.matrix = 0, 
+                    w_initial: np.matrix, 
                     alpha: float = 10**(-2),reg_factor: float = 0,
                     maxIteration: int = 100000):
     """
     Performs gradient descent for a given neural network.
     """
-    import numpy as np 
     #Initial guess (all zeros):
-    if w_initial == 0:
-        w_initial = np.matrix(np.zeros((X.shape[1],1)))
     w = w_initial    
     #Apply gradient descent:
     count = 0
@@ -168,13 +159,15 @@ def grad_descent_nn(X: np.matrix, Y: np.matrix,
         neuron_list = forward_propagation(X,w)
         cost = costFunction(X,Y, w, neuron_list, reg_factor = reg_factor)
         grad = gradFunction(X,Y,w, neuron_list, reg_factor = reg_factor)
+        print('Count ', count,'Cost: ', cost)
         for i in range(len(w)):
             w_new[i] = w[i] - grad[i] * alpha
         #In case the cost Function increases:
         if cost > cost_old:
             count_increase += 1
-            if count_increase == (maxIteration * (10**(-3)) + 1):
-                print('Cost function is increasing too frequently. Alpha reduced.')
+            if count_increase == (maxIteration * (10**(-4)) + 1):
+                print('Cost function is increasing too frequently.' +
+                      ' Alpha reduced.')
                 alpha = 0.5 * alpha
                 count_increase = 0
         error = abs((cost - cost_old)/cost)
@@ -187,8 +180,8 @@ def grad_descent_nn(X: np.matrix, Y: np.matrix,
 def neural_net_param(dataX: 'pd.DataFrame or similar',
                      dataY: 'pd.DataFrame or similar',
                      numLayers: int, numNeurons: int,
-                     alpha: float = 10**(-2), reg_factor: float = 0
-                     ) -> (np.matrix, np.matrix, list):
+                     alpha: float = 2, reg_factor: float = 0,
+                     **kargs) -> (np.matrix, np.matrix, list):
     """
     Trains the weights for a given neural network architecture.
     """
@@ -201,20 +194,23 @@ def neural_net_param(dataX: 'pd.DataFrame or similar',
     try:
         numLayers = int(numLayers)
     except:
-        print('numLayers must be an integer or float that can be coerced into an integer')
+        print('numLayers must be an integer or float that can be coerced' +
+              ' into an integer')
         return
     try:
         numNeurons = [int(numNeurons)] * numLayers
-        numNeurons.append(int(1))
+        numNeurons.append(int(Y.shape[1]))
     except:
         try:
             numNeurons = list(int(i) for i in numNeurons)
-            numNeurons.append(int(1))
+            numNeurons.append(int(Y.shape[1]))
         except:
-            print('NumNeurons must be a single value or a vector of size numLayers')
+            print('NumNeurons must be a single value or a vector of size' +
+                  ' numLayers')
             return
     if len(numNeurons)-1 != numLayers:
-        raise ValueError('NumNeurons must be a single value or a vector of size numLayers')
+        raise ValueError('NumNeurons must be a single value or a vector' +
+                         ' of size numLayers')
     #Defining parameters initial values:
     theta_list = [0]*(numLayers + 1)
     
@@ -224,8 +220,10 @@ def neural_net_param(dataX: 'pd.DataFrame or similar',
             theta_list[i] = np.random.rand(X.shape[1], numNeurons[i])
         else:
             theta_list[i] = np.random.rand(numNeurons[i-1]+1, numNeurons[i])
-    w,grad,neuron_list = grad_descent_nn(X, Y, neural_net_cost, backpropagation,
-                                         w_initial = theta_list, alpha = alpha)
+    w,grad,neuron_list = grad_descent_nn(X, Y, neural_net_cost,
+                                         backpropagation,
+                                         w_initial = theta_list, alpha = alpha,
+                                         **kargs)
     return w, grad, neuron_list
 
 def nn_prediction(X: np.matrix,theta_list: list) -> list:
