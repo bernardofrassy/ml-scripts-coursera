@@ -5,7 +5,7 @@ Created on Mon Apr 24 13:25:55 2017
 
 @author: bernardoalencar
 """
-from NeuralNetwork import neural_net_param, nn_prediction, check_shape
+from NeuralNetwork import neural_net_param, nn_prediction
 from DataSource import X_seg, Y_multi_seg, Y0_seg, X0_seg
 from ML_LogisticsRegression import logreg_param,logreg_prob
 import pandas as pd
@@ -46,7 +46,13 @@ def test_nn(X_seg: list,Y_seg: list, maxNeurons: int, maxLayers: int,
             except:
                 print(arch,' is not OK')
         arch_yields = [(archs[i],yields[i]) for i in range(len(archs))]
-    return arch_yields, archs, yields
+    arch_yields = sorted(arch_yields, key = lambda x:-x[1])
+    with open('test_nn_result','w') as f:
+        f.write('{0:>9}{1:>9}\n'.format('Arch','Yield'))
+        for i in range(len(arch_yields)):
+            f.write('{0:>9}{1:>9.6f}\n'.format(repr(arch_yields[i][0]),
+                                              float(arch_yields[i][1])))
+    return arch_yields
 
 def test_logreg_param(X_cross: list, Y_cross: list, w: list) -> float:
     """
@@ -65,8 +71,11 @@ def test_logreg_param(X_cross: list, Y_cross: list, w: list) -> float:
 #prob_Y = nn_prediction(X0_seg[1],w)[-1]
 #pd.DataFrame(prob_Y)
 #pd.DataFrame(prob_multi_Y)
-#result, archs, yields = test_nn(X_seg,Y_multi_seg, maxNeurons = 3, maxLayers = 3,
-#                 maxIteration = 10000)
-#result = sorted(result, key = lambda x:-x[1])
+result = test_nn(X_seg,Y_multi_seg, maxNeurons = 3,
+                                maxLayers = 3, reg_factor = 0.5,
+                                maxIteration = 100000)
+result = sorted(result, key = lambda x:-x[1])
+
+
 w_log = logreg_param(X0_seg[0],Y0_seg[0])
 prob = test_logreg_param(X0_seg[1],Y0_seg[1], w_log)

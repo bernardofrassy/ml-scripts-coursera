@@ -143,7 +143,7 @@ def grad_descent_nn(X: np.matrix, Y: np.matrix,
                     costFunction: 'function', gradFunction: 'function',
                     w_initial: np.matrix, 
                     alpha: float = 10**(-2),reg_factor: float = 0,
-                    maxIteration: int = 100000):
+                    maxIteration: int = 100000, printIteration: bool = False):
     """
     Performs gradient descent for a given neural network.
     """
@@ -159,7 +159,8 @@ def grad_descent_nn(X: np.matrix, Y: np.matrix,
         neuron_list = forward_propagation(X,w)
         cost = costFunction(X,Y, w, neuron_list, reg_factor = reg_factor)
         grad = gradFunction(X,Y,w, neuron_list, reg_factor = reg_factor)
-        print('Count ', count,'Cost: ', cost)
+        if printIteration == True:
+            print('Count ', count,'Cost: ', cost)
         for i in range(len(w)):
             w_new[i] = w[i] - grad[i] * alpha
         #In case the cost Function increases:
@@ -174,7 +175,8 @@ def grad_descent_nn(X: np.matrix, Y: np.matrix,
         w = w_new
         cost_old = cost
         count += 1 
-    print(error, count)
+    if printIteration == True:
+        print(error, count)
     return w, grad, neuron_list
 
 def neural_net_param(dataX: 'pd.DataFrame or similar',
