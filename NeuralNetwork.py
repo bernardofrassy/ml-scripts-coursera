@@ -226,7 +226,7 @@ def neural_net_param(dataX: 'pd.DataFrame or similar',
                                          backpropagation,
                                          w_initial = theta_list, alpha = alpha,
                                          **kargs)
-    return w, grad, neuron_list
+    return w
 
 def nn_prediction(X: np.matrix,theta_list: list) -> list:
     try:
@@ -245,4 +245,4 @@ def nn_prediction(X: np.matrix,theta_list: list) -> list:
             if i < len(theta_list):
                 ones_row = np.ones((neuron_list[i].shape[0],1))
                 neuron_list[i] = np.concatenate((ones_row,neuron_list[i]), axis = 1)
-    return neuron_list
+    return neuron_list[-1]

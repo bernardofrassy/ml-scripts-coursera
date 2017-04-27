@@ -6,7 +6,8 @@ Created on Mon Apr 24 13:25:55 2017
 @author: bernardoalencar
 """
 from NeuralNetwork import neural_net_param, nn_prediction
-from DataSource import X_seg, Y_multi_seg, Y0_seg, X0_seg
+from DataPreProcess import data_seg
+from DataSource import X_seg, Y_multi_seg, Y0_seg, X0_seg, X1_seg, Y1_seg, X,Y
 from ML_LogisticsRegression import logreg_param,logreg_prob
 import pandas as pd
 import numpy as np
@@ -25,8 +26,12 @@ def all_comb(n: int, k: int) -> list:
         allComb.append(currComb)        
     return allComb
 
-def test_nn(X_seg: list,Y_seg: list, maxNeurons: int, maxLayers: int,
+def test_nn_arch(X_seg: list,Y_seg: list, maxNeurons: int, maxLayers: int,
             alpha: float = 2, reg_factor: float = 0.5, **kargs) -> list:
+    """
+    Tests all possibles architectures for a neural network. Prints the result
+    in a file named 'test_nn_result'.
+    """
     archs = []
     yields = []
     arch_yields = {}
@@ -36,7 +41,7 @@ def test_nn(X_seg: list,Y_seg: list, maxNeurons: int, maxLayers: int,
             try:
                 w = neural_net_param(X_seg[0],Y_seg[0], numLayers, arch, alpha,
                                      reg_factor, **kargs)[0]
-                prob_Y = nn_prediction(X_seg[1],w)[-1]
+                prob_Y = nn_prediction(X_seg[1],w)
                 pred_Y = (prob_Y > 0.5) * (1)
                 rightRatio = np.mean((pred_Y == Y_multi_seg[1]) * (1),
                                      axis = (0,1))
@@ -54,28 +59,54 @@ def test_nn(X_seg: list,Y_seg: list, maxNeurons: int, maxLayers: int,
                                               float(arch_yields[i][1])))
     return arch_yields
 
-def test_logreg_param(X_cross: list, Y_cross: list, w: list) -> float:
+def test_param(X_cross: np.array, Y_cross: np.array, w_param: np.array or list,
+               probFunction: 'function') -> (float,np.matrix):
     """
-    Tests the parameters of a multi-class logistic regression model for 
+    Tests the parameters of logistic regression model or a neural network for 
     the percentage of success over a cross-evaluation set.
     """
-    prob = [0] * len(X_cross)
-    f1 = lambda x: logreg_prob(x,w)
-    f2 = lambda x: np.concatenate([x[i] for i in range(len(x))], axis = 1)
-    prob = f2(f1(X_cross))
-    return prob
+    prob = probFunction(X_cross,w_param)
+    if prob.shape[1] > 1:
+        pred = ((prob == np.amax(prob, axis = 1)) * 1)
+        numWrong = -np.sum((pred == Y_cross) * 1 - 1, axis = (0,1))/2
+    else:
+        pred = ((prob > 0.5) * 1)
+        numWrong = -np.sum((pred == Y_cross) * 1 - 1, axis = (0,1))
+    rightRatio = float(1 - numWrong/prob.shape[0])
+    return rightRatio, pred
 
-#w_multi = neural_net_param(X_seg[0],Y_multi_seg[0], 3,[3,3,3], alpha = 4)[0]
-#w = neural_net_param(X0_seg[0],Y0_seg[0], 2, [2,2])[0]
-#prob_multi_Y = nn_prediction(X_seg[1],w_multi)[-1]
-#prob_Y = nn_prediction(X0_seg[1],w)[-1]
-#pd.DataFrame(prob_Y)
-#pd.DataFrame(prob_multi_Y)
-result = test_nn(X_seg,Y_multi_seg, maxNeurons = 3,
-                                maxLayers = 3, reg_factor = 0.5,
-                                maxIteration = 100000)
-result = sorted(result, key = lambda x:-x[1])
+def plot_error_vs_examples(X: np.array, Y: np.array, paramFunction: 'function',
+                           probFunction: 'function', **kargs) -> None:
+    """
+    **kargs will be passed to paramFunction.
+    """
+    n = X.shape[0]
+    errorsPerExample = list()
+#    try:
+    for i in range(1,n//10-1):
+        X_s, Y_s = data_seg(X[0:10*i,:], Y[0:10*i,:],
+                                cut_values = [0.6,0.2,0.2])
+        w = paramFunction(X_s[0],Y_s[0], **kargs)
+        rightRatio = test_param(X_s[1],Y_s[1], w, probFunction)[0]
+        errorsPerExample.append((int(10*i),rightRatio))
+#    except:
+#        return print('Not able to slice given data')
+    return errorsPerExample
+            
+            
 
 
-w_log = logreg_param(X0_seg[0],Y0_seg[0])
-prob = test_logreg_param(X0_seg[1],Y0_seg[1], w_log)
+#w = logreg_param(X_seg[0],Y_multi_seg[0])
+
+#result, pred = test_param(X_seg[1],Y_multi_seg[1], w,
+#                          probFunction = logreg_prob)
+
+#w_nn = neural_net_param(X_seg[0], Y_multi_seg[0], 3, [3,3,3])[0]
+
+#result_nn, pred_nn = test_param(X_seg[1],Y_multi_seg[1], w_nn, nn_prediction)
+
+#plot_logreg = plot_error_vs_examples(X,Y, logreg_param, logreg_prob)
+
+plot_nn = plot_error_vs_examples(X,Y, neural_net_param, nn_prediction,
+                                 numLayers = 3, numNeurons = [3,3,3])
+

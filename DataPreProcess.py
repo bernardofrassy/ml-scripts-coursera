@@ -60,8 +60,8 @@ def data_seg(X: np.ndarray, Y: np.ndarray,
     """
     dataLength = X.shape[0]
     seg = np.array([rd.random() for i in range(dataLength)])
-    trainMask = (seg <= cut_values[1])
-    crossMask = (seg <= sum(cut_values[:2])) * (seg > cut_values[1])
+    trainMask = (seg <= cut_values[0])
+    crossMask = (seg <= sum(cut_values[:2])) * (seg > cut_values[0])
     testMask = (seg > sum(cut_values[:2]))
     X_seg = [X[trainMask], X[crossMask],X[testMask]]
     Y_seg = [Y[trainMask], Y[crossMask],Y[testMask]]
