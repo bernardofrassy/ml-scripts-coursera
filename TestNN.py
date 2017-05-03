@@ -101,11 +101,11 @@ def plot_error_vs_examples(X: np.array, Y: np.array, paramFunction: 'function',
 #result, pred = test_param(X_seg[1],Y_multi_seg[1], w,
 #                          probFunction = logreg_prob)
 
-w_nn = neural_net_param(X_seg[0], Y_multi_seg[0], 3, [3,3,3])
+#w_nn = neural_net_param(X_seg[0], Y_multi_seg[0], 3, [3,3,3])
 
-result_nn, pred_nn = test_param(X_seg[1],Y_multi_seg[1], w_nn, nn_prediction)
+#result_nn, pred_nn = test_param(X_seg[1],Y_multi_seg[1], w_nn, nn_prediction)
 
 #plot_logreg = plot_error_vs_examples(X,Y, logreg_param, logreg_prob)
 
-plot_nn = plot_error_vs_examples(X,Y, neural_net_param, nn_prediction,
+#plot_nn = plot_error_vs_examples(X,Y, neural_net_param, nn_prediction,
                                  numLayers = 3, numNeurons = [3,3,3])
