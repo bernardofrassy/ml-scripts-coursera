@@ -19,8 +19,8 @@ import numpy as np
 
 def neural_net_hyp(dataX: 'pd.DataFrame or similar',
                    dataY: 'pd.DataFrame or similar',
-                   numLayers: int, numNeurons: int,
-                   reg_factor: float = 0) -> (list,list):
+                   numLayers: int, numNeurons: 'int or list',
+                   lambdaFactor: float = 0) -> (list,list):
     """
     Calculates the weights and neurons value for a given neural network
     architecture.
@@ -29,11 +29,11 @@ def neural_net_hyp(dataX: 'pd.DataFrame or similar',
         X = np.matrix(dataX)
         X = np.concatenate((np.ones((X.shape[0],1)),X), axis = 1)
     except:
-        raise ValueError('dataSet cannot be converted into Matrix')
+        raise TypeError('dataSet cannot be converted into Matrix')
     try:
         numLayers = int(numLayers)
     except:
-        print('numLayers must be an integer or float that can' +
+        raise TypeError('numLayers must be an integer or float that can' +
               ' be coerced into an integer')
         return
     try:
@@ -44,48 +44,49 @@ def neural_net_hyp(dataX: 'pd.DataFrame or similar',
             numNeurons = list(int(i) for i in numNeurons)
             numNeurons.append(int(1))
         except:
-            print('NumNeurons must be a single value or a vector of size' +
-                  ' numLayers')
+            raise ValueError('NumNeurons must be a single value or a vector of'
+                             + 'size numLayers')
             return
     if len(numNeurons)-1 != numLayers:
         raise ValueError('NumNeurons must be a single value or a vector' +
                          ' of size numLayers')
-    #Defining parameters initial values:
-    theta_list = [0]*(numLayers+1)
-    neuron_list = [0]*(numLayers + 1)
-    z_list = [0]*(numLayers + 1)
-    #Defining theta values:
-    for i in range(len(theta_list)):
+    # Defining parameters initial values:
+    thetaList = [0]*(numLayers+1)
+    neuronList = [0]*(numLayers + 1)
+    zList = [0]*(numLayers + 1)
+    # Defining theta values:
+    for i in range(len(thetaList)):
         if i == 0:
-            theta_list[i] = np.random.rand(X.shape[1], numNeurons[i])
+            thetaList[i] = np.random.rand(X.shape[1], numNeurons[i])
         else:
-            theta_list[i] = np.random.rand(numNeurons[i-1]+1, numNeurons[i])
-    #Defining neuron and z values:
+            thetaList[i] = np.random.rand(numNeurons[i-1]+1, numNeurons[i])
+    # Defining neuron and z values:
     for i in range(numLayers+1):
         if i == 0:
-            z_list[i] = X * theta_list[i]
+            zList[i] = X * thetaList[i]
         else:
-            z_list[i] = neuron_list[i-1] * theta_list[i]
-        neuron_list[i] = 1/(1 + np.exp(-z_list[i]))
-        neuron_list[i] = np.concatenate((np.ones((X.shape[0],1)),X), axis = 1)
-    return theta_list,neuron_list
+            zList[i] = neuronList[i-1] * thetaList[i]
+        neuronList[i] = 1/(1 + np.exp(-zList[i]))
+        neuronList[i] = np.concatenate((np.ones((X.shape[0],1)),X), axis = 1)
+    return thetaList,neuronList
 
-def forward_propagation(X: np.matrix, theta_list: list) -> list:
+def forward_propagation(X: np.matrix, thetaList: list) -> list:
     """
     Performs forward propagation to calculate neuron values.
     """
-    neuron_list = [0]*(len(theta_list)+1)
-    z_list = [0]*(len(theta_list)+1)
-    for i in range(len(theta_list)+1):
+    neuronList = [0]*(len(thetaList)+1)
+    zList = [0]*(len(thetaList)+1)
+    for i in range(len(thetaList)+1):
         if i == 0:
-            neuron_list[i] = X
+            neuronList[i] = X
         else:
-            z_list[i-1] = neuron_list[i-1] * theta_list[i-1]
-            neuron_list[i] = 1/(1 + np.exp(-z_list[i-1]))
-            if i < len(theta_list):
-                ones_row = np.ones((neuron_list[i].shape[0],1))
-                neuron_list[i] = np.concatenate((ones_row,neuron_list[i]), axis = 1)
-    return neuron_list
+            zList[i-1] = neuronList[i-1] * thetaList[i-1]
+            neuronList[i] = 1/(1 + np.exp(-zList[i-1]))
+            if i < len(thetaList):
+                onesRow = np.ones((neuronList[i].shape[0],1))
+                neuronList[i] = np.concatenate((onesRow,neuronList[i]),
+                                               axis = 1)
+    return neuronList
     
 def check_shape(a: list) -> None:
     """
@@ -95,94 +96,95 @@ def check_shape(a: list) -> None:
         print('For %s shape is: %s' %(i,a[i].shape))
     return
 
-def backpropagation(X: np.matrix,Y: np.matrix,theta_list: list, 
-                    neuron_list: list,
-                    reg_factor: float = 0) -> list:
+def backpropagation(X: np.matrix,Y: np.matrix,thetaList: list, 
+                    neuronList: list,
+                    lambdaFactor: float = 0) -> list:
     """
-    Calculates the gradient using backpropagation algorith for
+    Calculates the gradient using backpropagation algorithm for
     neural networks.
     """
-    numLayers = len(theta_list)-1
+    lenTheta = len(thetaList)
+    numLayers = lenTheta - 1
     # Defining partial derivative to z:
-    delta = [0]*(len(theta_list))
-    dg_z = [0] * len(theta_list)
-    for i in range(len(theta_list)):
-        dg_z[i] = np.multiply(neuron_list[i+1],(1-neuron_list[i+1]))
+    delta = [0]* lenTheta
+    dg_z = [0] * lenTheta
+    gradient = [0] * lenTheta
+    for i in range(lenTheta):
+        dg_z[i] = np.multiply(neuronList[i+1],(1-neuronList[i+1]))
     # Calculating deltas:
     for i in range(numLayers+1)[::-1]:
         if i == (numLayers):
-            delta[i] = neuron_list[i+1] - Y
+            delta[i] = neuronList[i+1] - Y
         else:
-            delta[i] = np.multiply((delta[i+1] * theta_list[i+1][1:,:].T), dg_z[i][:,1:])
-    gradient = [0] * len(theta_list)
-    for i in range(len(theta_list)):
-        gradient[i] = np.zeros(theta_list[i].shape)
+            delta[i] = np.multiply((delta[i+1] * thetaList[i+1][1:,:].T),
+                                  dg_z[i][:,1:])
+    for i in range(lenTheta):
+        gradient[i] = np.zeros(thetaList[i].shape)
     for i in range(numLayers+1):
-        gradient[i] = (neuron_list[i].T * delta[i])/X.shape[0] 
-        gradient[i] = gradient[i] + reg_factor * theta_list[i]
+        gradient[i] = (neuronList[i].T * delta[i])/X.shape[0] 
+        gradient[i] = gradient[i] + lambdaFactor * thetaList[i]
     return gradient
 
-def neural_net_cost(X: np.matrix,Y: np.matrix, theta_list: list,
-                    neuron_list: list, reg_factor:float = 0) -> float:
+def neural_net_cost(X: np.matrix,Y: np.matrix, thetaList: list,
+                    neuronList: list, lambdaFactor: float = 0) -> float:
     """
     Calculates the cross entropy for a given neural network.
     """
-    cost = 0
-    hyp = neuron_list[-1]
+    hyp = neuronList[-1]
     m = X.shape[0]
-    theta_sum = [np.sum(np.sum(np.square(theta_list[i]))) for i in
-                 range(len(theta_list))]
-    theta_sum = np.sum(theta_sum)
-    cost = (- np.sum(np.multiply(Y, np.log(hyp)), axis = (0,1)) -
-            np.sum(np.multiply((1-Y), np.log(1-hyp)), axis = (0,1)))/m
-    cost = cost + reg_factor/m * theta_sum
+    fSquare = lambda x: np.sum(np.sum(np.square(x)))
+    thetaSum = [ fSquare(thetaList[i]) for i in range(len(thetaList))]
+    thetaSum = np.sum(thetaSum)
+    fMult = lambda x,y: np.sum(np.multiply(x,y), axis = (0,1))
+    cost = (-fMult(Y, np.log(hyp)) - fMult((1 - Y), np.log(1 - hyp)))/m
+    cost = cost + lambdaFactor/m * thetaSum
     cost = np.sum(cost)
     return cost
 
 def grad_descent_nn(X: np.matrix, Y: np.matrix,
                     costFunction: 'function', gradFunction: 'function',
                     w_initial: np.matrix, 
-                    alpha: float = 10**(-2),reg_factor: float = 0,
+                    alpha: float = 10**(-2),lambdaFactor: float = 0,
                     maxIteration: int = 100000, printIteration: bool = False):
     """
     Performs gradient descent for a given neural network.
     """
-    #Initial guess (all zeros):
+    # Initial guess (all zeros):
     w = w_initial    
-    #Apply gradient descent:
+    # Apply gradient descent:
     count = 0
-    count_increase = 0
+    countIncrease = 0
     error = 0.1
-    cost_old = 10
-    w_new = [0] * len(w)
+    costOld = 10
+    wNew = [0] * len(w)
     while ((error > 10**(-10)) and (count < maxIteration)):
-        neuron_list = forward_propagation(X,w)
-        cost = costFunction(X,Y, w, neuron_list, reg_factor = reg_factor)
-        grad = gradFunction(X,Y,w, neuron_list, reg_factor = reg_factor)
+        neuronList = forward_propagation(X,w)
+        cost = costFunction(X,Y, w, neuronList, lambdaFactor = lambdaFactor)
+        grad = gradFunction(X,Y,w, neuronList, lambdaFactor = lambdaFactor)
         if printIteration == True:
             print('Count ', count,'Cost: ', cost)
         for i in range(len(w)):
-            w_new[i] = w[i] - grad[i] * alpha
+            wNew[i] = w[i] - grad[i] * alpha
         #In case the cost Function increases:
-        if cost > cost_old:
-            count_increase += 1
-            if count_increase == (maxIteration * (10**(-4)) + 1):
+        if cost > costOld:
+            countIncrease += 1
+            if countIncrease == (maxIteration * (10**(-4)) + 1):
                 print('Cost function is increasing too frequently.' +
                       ' Alpha reduced.')
                 alpha = 0.5 * alpha
-                count_increase = 0
-        error = abs((cost - cost_old)/cost)
-        w = w_new
-        cost_old = cost
+                countIncrease = 0
+        error = abs((cost - costOld)/cost)
+        w = wNew
+        costOld = cost
         count += 1 
     if printIteration == True:
         print(error, count)
-    return w, grad, neuron_list
+    return w, grad, neuronList
 
 def neural_net_param(dataX: 'pd.DataFrame or similar',
                      dataY: 'pd.DataFrame or similar',
                      numLayers: int, numNeurons: int,
-                     alpha: float = 2, reg_factor: float = 0,
+                     alpha: float = 2, lambdaFactor: float = 0,
                      **kargs) -> (np.matrix, np.matrix, list):
     """
     Trains the weights for a given neural network architecture.
@@ -214,35 +216,35 @@ def neural_net_param(dataX: 'pd.DataFrame or similar',
         raise ValueError('NumNeurons must be a single value or a vector' +
                          ' of size numLayers')
     #Defining parameters initial values:
-    theta_list = [0]*(numLayers + 1)
+    thetaList = [0]*(numLayers + 1)
     
     #Random inital theta_values:
-    for i in range(len(theta_list)):
+    for i in range(len(thetaList)):
         if i == 0:
-            theta_list[i] = np.random.rand(X.shape[1], numNeurons[i])
+            thetaList[i] = np.random.rand(X.shape[1], numNeurons[i])
         else:
-            theta_list[i] = np.random.rand(numNeurons[i-1]+1, numNeurons[i])
-    w,grad,neuron_list = grad_descent_nn(X, Y, neural_net_cost,
+            thetaList[i] = np.random.rand(numNeurons[i-1]+1, numNeurons[i])
+    w, grad, neuronList = grad_descent_nn(X, Y, neural_net_cost,
                                          backpropagation,
-                                         w_initial = theta_list, alpha = alpha,
+                                         w_initial = thetaList, alpha = alpha,
                                          **kargs)
     return w
 
-def nn_prediction(X: np.matrix,theta_list: list) -> list:
+def nn_prediction(X: np.matrix,thetaList: list) -> list:
     try:
         X = np.matrix(X)
         X = np.concatenate((np.ones((X.shape[0],1)),X), axis = 1)
     except:
         raise ValueError('X cannot be converted into Matrix')
-    neuron_list = [0]*(len(theta_list)+1)
-    z_list = [0]*(len(theta_list)+1)
-    for i in range(len(theta_list)+1):
+    neuronList = [0]*(len(thetaList)+1)
+    zList = [0]*(len(thetaList)+1)
+    for i in range(len(thetaList)+1):
         if i == 0:
-            neuron_list[i] = X
+            neuronList[i] = X
         else:
-            z_list[i-1] = neuron_list[i-1] * theta_list[i-1]
-            neuron_list[i] = 1/(1 + np.exp(-z_list[i-1]))
-            if i < len(theta_list):
-                ones_row = np.ones((neuron_list[i].shape[0],1))
-                neuron_list[i] = np.concatenate((ones_row,neuron_list[i]), axis = 1)
-    return neuron_list[-1]
+            zList[i-1] = neuronList[i-1] * thetaList[i-1]
+            neuronList[i] = 1/(1 + np.exp(-zList[i-1]))
+            if i < len(thetaList):
+                onesRow = np.ones((neuronList[i].shape[0],1))
+                neuronList[i] = np.concatenate((onesRow,neuronList[i]), axis = 1)
+    return neuronList[-1]

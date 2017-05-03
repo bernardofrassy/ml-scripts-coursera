@@ -35,18 +35,18 @@ def logreg_hyp(X: np.matrix, w: np.matrix) -> np.matrix:
     return hyp
 
 def logreg_cost(X: np.matrix, Y: np.matrix,
-                w: np.matrix, reg_factor: float = 0) -> float:
+                w: np.matrix, lambdaFactor: float = 0) -> float:
     n = X.shape[0]
     hyp = logreg_hyp(X,w)
     cost = 1/(n) * (-Y.T * np.log(hyp) -(1-Y).T*np.log(1-hyp) +
-              reg_factor * (w[1:].T * w[1:]))
+              lambdaFactor * (w[1:].T * w[1:]))
     return cost
 
 def logreg_cost_grad(X: np.matrix, Y: np.matrix,
-                     w: np.matrix, reg_factor: float = 0) -> np.matrix:
+                     w: np.matrix, lambdaFactor: float = 0) -> np.matrix:
     n = X.shape[0]
     hyp = logreg_hyp(X,w)
-    cost_grad = (1/n) * (X.T * (hyp - Y) + reg_factor * w)
+    cost_grad = (1/n) * (X.T * (hyp - Y) + lambdaFactor * w)
     return cost_grad
 
 
