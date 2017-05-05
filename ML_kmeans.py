@@ -8,7 +8,7 @@ Created on Thu May  4 15:17:54 2017
 import numpy as np
 
 def k_means_clustering(dataSet: np.matrix, numClusters: int,
-                       numTrials: int) -> np.matrix:
+                       numTrials: int) -> (np.matrix, float):
     """
     Applies K-means clustering method to a given dataset.
     """
@@ -54,7 +54,11 @@ def k_means_clustering(dataSet: np.matrix, numClusters: int,
             lowerCost = cost
     return bestCord, lowerCost
 
-def distance_to_clusters(dataSet, clusterMatrix):
+def distance_to_clusters(dataSet: np.matrix,
+                         clusterMatrix: np.matrix) -> np.matrix:
+    """
+    Calculates the distance between the dataset and all given clusters.
+    """
     numClusters = clusterMatrix.shape[0]
     for i in range(numClusters):
         f_dist = lambda x,y: np.sum(np.square(x - y), axis = 1)
@@ -65,16 +69,23 @@ def distance_to_clusters(dataSet, clusterMatrix):
             distClusters = np.concatenate((distClusters, currDist), axis = 1)
     return distClusters
 
-def remove_zero_clusts(closerClust, clusterCords) -> (np.matrix, np.matrix):
+def remove_zero_clusts(closerClust: np.matrix,
+                       clusterCords: np.matrix) -> np.matrix:
+    """
+    Remove clusters that is not the closest to any data point.
+    """
     # Remove zero-items clust:
-        zeroClusts = list()
-        for i in range(closerClust.shape[1]):
-            if (closerClust[:,i] == 0).all(axis = 0):
-                zeroClusts.append(i)
-        nonZeroCords = np.delete(clusterCords, zeroClusts, axis = 0)
-        return nonZeroCords
+    zeroClusts = list()
+    for i in range(closerClust.shape[1]):
+        if (closerClust[:,i] == 0).all(axis = 0):
+            zeroClusts.append(i)
+    nonZeroCords = np.delete(clusterCords, zeroClusts, axis = 0)
+    return nonZeroCords
     
-def remove_rep_clusts(clusterCords):
+def remove_rep_clusts(clusterCords: np.matrix) -> np.matrix:
+    """
+    Remove repeated clusters from a set of clusters.
+    """
     removedCords = clusterCords.copy()
     repIndex = list()
     for i in range(removedCords.shape[0]):
@@ -83,9 +94,3 @@ def remove_rep_clusts(clusterCords):
             repIndex.append(i)
     removedCords = np.delete(removedCords, repIndex, axis = 0)
     return removedCords
-    
-#X = np.matrix(range(6))
-#X = np.concatenate((X, (X*2 - 3), X*8 + 5,X), axis = 0)
-#k_right = np.matrix([30,30,30,30],[])
-#k, cost = k_means_clustering(test_data,numClusters = 4, numTrials = 100)
-print(k)
