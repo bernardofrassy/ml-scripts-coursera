@@ -72,12 +72,14 @@ def normalize_data(data: 'np.matrix, pd.DataFrame or similar'
     """
     Normalizes a given dataset.
     """
-    if len(data.shape) == 1:
-        data = data.reshape((len(data),1))
-    for i in range(data.shape[1]):
-        if np.std(data[:,i]) != 0:
-            data[:,i] = (data[:,i] - np.average(data[:,i]))/np.std(data[:,i])
-    return data
+    dataCopy = np.matrix(data)
+    if len(dataCopy.shape) == 1:
+        data = dataCopy.reshape((len(data),1))
+    for i in range(dataCopy.shape[1]):
+        if np.std(dataCopy[:,i]) != 0:
+            dataCopy[:,i] = (dataCopy[:,i] -
+                            np.average(dataCopy[:,i]))/np.std(dataCopy[:,i])
+    return dataCopy
 
 def data_class_separation(data: np.array, class_list: list) -> list:
     """
@@ -94,7 +96,7 @@ def data_std_shape(data) -> np.ndarray:
     Converts the data for the standard used in the programs.
     """
     if type(data) != np.ndarray:
-        data = np.aarray(data)
+        data = np.array(data)
     if len(data.shape) == 1:
         data = data.reshape((len(data),1))
     if data.shape[0] < data.shape[1]:

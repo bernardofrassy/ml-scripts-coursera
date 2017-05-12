@@ -115,13 +115,14 @@ class Network:
             print('For %s shape is: %s' %(i,a[i].shape))
         return
     
-    def backpropagation(self, X: np.matrix,Y: np.matrix,thetaList: list, 
+    def backpropagation(self, X: np.matrix, thetaList: list, 
                         neuronList: list,
                         lambdaFactor: float = 0) -> list:
         """
         Calculates the gradient using backpropagation algorithm for
         neural networks.
         """
+        Y = self.train_target
         lenTheta = len(thetaList)
         numLayers = lenTheta - 1
         # Defining partial derivative to z:
@@ -144,11 +145,12 @@ class Network:
             gradient[i] = gradient[i] + lambdaFactor * thetaList[i]
         return gradient
     
-    def neural_net_cost(self, X: np.matrix, Y: np.matrix, thetaList: list,
+    def neural_net_cost(self, X: np.matrix, thetaList: list,
                         neuronList: list, lambdaFactor: float = 0) -> float:
         """
         Calculates the cross entropy for a given neural network.
         """
+        Y = self.train_target
         hyp = neuronList[-1]
         m = X.shape[0]
         fSquare = lambda x: np.sum(np.sum(np.square(x)))
@@ -160,11 +162,11 @@ class Network:
         cost = np.sum(cost)
         return cost
     
-    def grad_descent(self, X: np.matrix, Y: np.matrix,
-                        costFunction: 'function', gradFunction: 'function',
-                        w_initial: np.matrix, 
-                        alpha: float = 10**(-2),lambdaFactor: float = 0,
-                        maxIteration: int = 100000, printIteration: bool = False):
+    def grad_descent(self, X: np.matrix, costFunction: 'function',
+                     gradFunction: 'function',
+                     w_initial: np.matrix, alpha: float = 10**(-2), 
+                     lambdaFactor: float = 0, maxIteration: int = 100000, 
+                     printIteration: bool = False, momentum: bool = False):
         """
         Performs gradient descent for a given neural network.
         """
@@ -174,23 +176,32 @@ class Network:
         count = 0
         countIncrease = 0
         error = 0.1
+        eps = 1- 10**(-6)
+        velo = [0] * len(w)
         costOld = 10
         wNew = [0] * len(w)
-        while ((error > 10**(-10)) and (count < maxIteration)):
-            neuronList = self.forward_propagation(X,w)
-            cost = costFunction(X,Y, w, neuronList, lambdaFactor = lambdaFactor)
-            grad = gradFunction(X,Y,w, neuronList, lambdaFactor = lambdaFactor)
+        while ((error > 10**(-20)) and (count < maxIteration)):
+            neuronList = self.forward_propagation(X, w)
+            cost = costFunction(X, w, neuronList, lambdaFactor = lambdaFactor)
+            grad = gradFunction(X, w, neuronList, lambdaFactor = lambdaFactor)
             if printIteration == True:
                 print('Count ', count,'Cost: ', cost)
-            for i in range(len(w)):
-                wNew[i] = w[i] - grad[i] * alpha
-            #In case the cost Function increases:
+            if (momentum == False) or (count == 0):
+                for i in range(len(w)):
+                    wNew[i] = w[i] - grad[i] * alpha
+                    velo[i] = wNew[i] - w[i]
+            if (momentum == True) and (count != 0):
+                for i in range(len(w)):
+                    wNew[i] = w[i] + (eps * velo[i]
+                                      - (grad[i]* alpha))
+                    velo[i] = wNew[i] - w[i]
+            # In case the cost Function increases:
             if cost > costOld:
                 countIncrease += 1
                 if countIncrease == (maxIteration * (10**(-4)) + 1):
                     print('Cost function is increasing too frequently.' +
                           ' Alpha reduced.')
-                    alpha = 0.5 * alpha
+                    alpha = 0.8 * alpha
                     countIncrease = 0
             error = abs((cost - costOld)/cost)
             w = wNew
@@ -202,7 +213,30 @@ class Network:
         self.cost = cost
         self.neuron = neuronList
     
-    def initialize(self, numLayers: int, numNeurons: int,
+    def grad_check(self, X: np.matrix, theta: list,
+                   neuron: list, grad: list) -> bool:
+        """
+        Checks the if computed gradient is the same as the expected gradient.
+        """
+        eps = 1
+        expGrad = 0
+        diffGrad = True
+        for i in range(len(theta)):
+            for dest in range(theta[i].shape[0]):
+                for weight in range(theta[i].shape[1]):
+                    theta[i][dest,weight] += eps
+                    upperCost = self.neural_net_cost(X, theta,
+                                                     neuron)/(2 * eps)
+                    theta[i][dest,weight] -= (2 * eps)
+                    lowerCost = self.neural_net_cost(X, theta,
+                                                     neuron)/(2 * eps)
+                    expGrad = (upperCost - lowerCost)
+                    theta[i][dest,weight] += eps
+                    if abs(expGrad - grad[i][dest,weight]) > 10**(-5):
+                            diffGrad = False
+        return diffGrad
+                                                        
+    def train(self, numLayers: int, numNeurons: int,
                          alpha: float = 2, lambdaFactor: float = 0,
                          **kargs) -> (np.matrix, np.matrix, list):
         """
@@ -249,10 +283,10 @@ class Network:
             else:
                 thetaList[i] = np.random.rand(numNeurons[i-1]+1, numNeurons[i])
         self.costFunction = self.neural_net_cost
-        self.grad_descent(X, Y, self.costFunction,
-                             self.backpropagation,
-                             w_initial = thetaList, alpha = alpha,
-                             **kargs)
+        self.grad_descent(X, self.costFunction,
+                          self.backpropagation,
+                          w_initial = thetaList, alpha = alpha,
+                          **kargs)
     
     def predict_targets(self):
         try:
