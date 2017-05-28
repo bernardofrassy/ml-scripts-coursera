@@ -5,3 +5,6 @@ NeuralNetwork1.py
 untitled1.py
 CurrentFunc.py
 DataSource.py
+test.csv
+train.csv
+gender_submission.csv
