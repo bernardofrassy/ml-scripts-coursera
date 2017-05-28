@@ -1,9 +1,6 @@
 __pycache__/
 debug.py
-MachineLearningFunctions.py
-NeuralNetwork1.py
-untitled1.py
-CurrentFunc.py
+untitled.py
 DataSource.py
 test.csv
 train.csv
