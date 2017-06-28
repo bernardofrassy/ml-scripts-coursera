@@ -1,6 +1,9 @@
-__pycache__v/
+__pycache__/
 untitled.py
 DataSource.py
 test.csv
 train.csv
 gender_submission.csv
+data_train
+data_test
+.gitignore.orig
